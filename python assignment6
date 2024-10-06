@@ -1,0 +1,133 @@
+import math
+
+# 1. Function to perform a statistical analysis on the ciphertext
+def statistical_attack(ciphertext):
+    # Basic frequency analysis
+    frequency = {}
+    for char in ciphertext:
+        if char.isalpha():  # Only consider alphabetic characters
+            frequency[char] = frequency.get(char, 0) + 1
+    
+    # Sort by frequency
+    sorted_freq = sorted(frequency.items(), key=lambda item: item[1], reverse=True)
+    return sorted_freq
+
+# 2. Rail Fence Encryption Function
+def rail_fence_encrypt(plaintext, key):
+    rail = [['\n' for i in range(len(plaintext))]
+            for j in range(key)]
+    
+    dir_down = None
+    row, col = 0, 0
+
+    for char in plaintext:
+        if row == 0:
+            dir_down = True
+        if row == key - 1:
+            dir_down = False
+        
+        rail[row][col] = char
+        col += 1
+
+        if dir_down:
+            row += 1
+        else:
+            row -= 1
+
+    cipher = []
+    for i in range(key):
+        for j in range(len(plaintext)):
+            if rail[i][j] != '\n':
+                cipher.append(rail[i][j])
+
+    return ''.join(cipher)
+
+# 3. Columnar Transposition Encryption Function
+def columnar_transposition_encrypt(plaintext, key):
+    # Create columns based on key length
+    num_cols = len(key)
+    num_rows = math.ceil(len(plaintext) / num_cols)
+
+    # Fill the matrix
+    matrix = [''] * num_cols
+    for i in range(num_cols):
+        for j in range(num_rows):
+            if i + j * num_cols < len(plaintext):
+                matrix[i] += plaintext[i + j * num_cols]
+
+    # Sort columns based on key
+    key_order = sorted(range(len(key)), key=lambda k: key[k])
+    cipher = ''.join(matrix[i] for i in key_order)
+
+    return cipher
+
+# 4. Rail Fence Decryption Function
+def rail_fence_decrypt(ciphertext, key):
+    rail = [['\n' for i in range(len(ciphertext))]
+            for j in range(key)]
+
+    dir_down = None
+    row, col = 0, 0
+
+    for char in range(len(ciphertext)):
+        if row == 0:
+            dir_down = True
+        if row == key - 1:
+            dir_down = False
+
+        rail[row][col] = '*'
+        col += 1
+
+        if dir_down:
+            row += 1
+        else:
+            row -= 1
+
+    index = 0
+    for i in range(key):
+        for j in range(len(ciphertext)):
+            if (rail[i][j] == '*' and index < len(ciphertext)):
+                rail[i][j] = ciphertext[index]
+                index += 1
+
+    result = []
+    row, col = 0, 0
+    for char in range(len(ciphertext)):
+        if row == 0:
+            dir_down = True
+        if row == key - 1:
+            dir_down = False
+
+        if rail[row][col] != '\n':
+            result.append(rail[row][col])
+            col += 1
+
+        if dir_down:
+            row += 1
+        else:
+            row -= 1
+
+    return ''.join(result)
+
+# Example usage
+if __name__ == "__main__":
+    # 1. Statistical attack on the ciphertext
+    ciphertext = "XLILSYWIMWRSAJSVWEPIJSVJSYVQMPPMSRHSPPEVWMXMWASVX-LQSVILYVVCFIJSVIXLIWIPPIVVIGIMZIWQSVISJJIVW"
+    print("Statistical Analysis:")
+    frequency_analysis = statistical_attack(ciphertext)
+    print(frequency_analysis)
+
+    # 2. Rail Fence encryption
+    plaintext = "HELLOTHISISARAILFENCETEST"
+    key_rail = 3
+    rail_encrypted = rail_fence_encrypt(plaintext, key_rail)
+    print(f"Rail Fence Encrypted: {rail_encrypted}")
+
+    # 3. Columnar transposition encryption
+    key_columnar = "ONE"
+    columnar_encrypted = columnar_transposition_encrypt(plaintext, key_columnar)
+    print(f"Columnar Transposition Encrypted: {columnar_encrypted}")
+
+    # 4. Rail Fence decryption
+    rail_decrypted = rail_fence_decrypt(rail_encrypted, key_rail)
+    print(f"Rail Fence Decrypted: {rail_decrypted}")
